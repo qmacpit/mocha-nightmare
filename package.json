@@ -1,0 +1,34 @@
+{
+  "name": "mocha-nightmare",
+  "version": "0.0.1",
+  "description": "mocha client side tests nightmare runner",
+  "keywords": [
+    "mocha",
+    "nightmare",
+    "test"
+  ],
+  "main": "app.js",
+  "bin": {
+    "mocha-nightmare": "./bin/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    ".npmrc",
+    "bin/",
+    "src/"
+  ],
+  "engines": { "node" : ">=6.3.0" },
+  "author": "qmacpit <qmacpit@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qmacpit/mocha-nightmare"
+  },
+  "dependencies": {
+    "colors": "1.1.2",
+    "commander": "2.9.0",
+    "nightmare": "2.8.1"
+  }
+}
