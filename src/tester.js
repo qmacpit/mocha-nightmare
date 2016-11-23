@@ -31,6 +31,12 @@ function fetchTestsResults(nightmare, callback) {
   retry();
 }
 
+
+/**
+ * Install test run lifespan
+ * Terminates the program after lifespan timeout expires
+ * Can be used for prevening the program to run endlessly
+ */
 const installLifespan = lifespan => {
 
   logger(`installing lifespan timeout ${lifespan}`);
@@ -44,6 +50,45 @@ const installLifespan = lifespan => {
 
 };
 
+
+/**
+ * Prepare an array of js resources to be injecteed to the browser
+ * Combines test runner resources with user defined js files
+ */
+const prepareResources = (configFile, configFilePath) => {
+
+  logger(`preparing resources for ${configFilePath}`);
+
+  const loadTestResource = filePath => path.resolve(path.dirname(configFilePath), filePath)
+  const loadResource = filePath => path.resolve(__dirname, filePath)
+
+  return [
+    ...TEST_SETUP_RESOURCES.map(loadResource),
+    ...configFile.testResources.map(loadTestResource),
+    loadResource(TEST_RUNNER_PATH)
+   ];
+};
+
+
+/**
+ * Try to open configuration file
+ * Terminates the program if file cannot be opened
+ */
+const getConfigurationFile = configFilePath => {
+
+  let configFile;
+
+  try {
+    configFile = require(configFilePath);
+  } catch (err) {
+    logger.error(`error while loading resources file: ${configFilePath}`);
+    logger.error(err.stack);
+    process.exit();
+  }
+
+  return configFile;
+}
+
 module.exports = config => {
 
   logger('configuration:')
@@ -56,56 +101,60 @@ module.exports = config => {
     show: config.headfull
   });
 
-  const resourceFilePath = path.resolve(process.cwd(), config.resources);
-  let configFile;
-
-  try {
-    configFile = require(resourceFilePath);
-  } catch (err) {
-    logger.error(`error while loading resources file: ${resourceFilePath}`);
-    logger.error(err.stack);
-    process.exit();
-  }
+  //read configuration from file
+  const configFilePath = path.resolve(process.cwd(), config.resources);
+  const configFile = getConfigurationFile(configFilePath);
 
   if (config.lifespan) {
     installLifespan(config.lifespan);
   }
 
-  const loadTestResource = filePath => path.resolve(path.dirname(resourceFilePath), filePath)
-  const loadResource = filePath => path.resolve(__dirname, filePath)
-
-  const resources = [
-    ...TEST_SETUP_RESOURCES.map(loadResource),
-    ...configFile.testResources.map(loadTestResource),
-    loadResource(TEST_RUNNER_PATH)
-   ];
+  //prepare js resources
+  const resources = prepareResources(configFile, configFilePath);
 
   //open page
   nightmare
-    .goto(config.url)
-    .wait(config.warmup);
+    .on(
+      'console',
+      (type, msg) => {
+       logger.info(type)
+       logger.info(msg)
+      }
+    )
+    .goto(config.url);
 
-  //load resources
-  resources.forEach(current => {
-    logger(`injecting: ${current}`);
-    nightmare.inject('js', current);
-  });
+  setTimeout(
+    () => {
 
-  nightmare
-    .then(() => {
+      logger('warmup performed')
 
-      logger('running tests');
-
-      fetchTestsResults(nightmare, testResults => {
-
-        logger('logs collected');
-        process.stdout.write(testResults);
-
-        if (!config.endless) {
-          process.exit();
-        }
-
+      //load resources
+      resources.forEach(current => {
+        logger(`injecting: ${current}`);
+        nightmare.inject('js', current);
       });
 
-    });
+      //run tests
+      nightmare
+        .then(() => {
+
+          logger('running tests');
+
+          fetchTestsResults(nightmare, testResults => {
+
+            logger('logs collected');
+            process.stdout.write(testResults);
+
+            if (!config.endless) {
+              process.exit();
+            }
+
+          });
+
+        });
+
+    },
+    config.warmup
+  );
+
 };

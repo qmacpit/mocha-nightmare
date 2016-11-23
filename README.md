@@ -80,3 +80,24 @@ at least:
 - tests
 - linting
 - mocha & webConsole are a bit out of date
+
+### Troubleshooting
+
+```
+DEBUG=* mocha-nightmare -u http://<tested_page_url> -r <json_configuration_file_path> -v
+```
+### Running in headless environment
+
+this applies to ubunut server 16.04 only
+ - install missing libs
+ ```bash
+ sudo apt install libxss1
+ ```
+ - install xvfb
+ ```bash
+ sudo apt install xvfb
+ ```
+ - use xvfb-run to run
+ ```bash
+ xvfb-run mocha-nightmare -u http://<tested_page_url> -r <json_configuration_file_path> -v
+ ```

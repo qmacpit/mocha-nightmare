@@ -22,6 +22,6 @@ module.exports = isVerbose => {
 
   logger = msg => isVerbose ? console.log(colors.cyan(prettyLog(msg))) : null;
   logger.error = msg => console.log(colors.red(prettyLog(msg)));
-
+  logger.info = msg => isVerbose ? console.log(colors.magenta(prettyLog(msg))) : null;
   return logger;
 }
