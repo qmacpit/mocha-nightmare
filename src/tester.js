@@ -105,22 +105,23 @@ module.exports = config => {
   const configFilePath = path.resolve(process.cwd(), config.resources);
   const configFile = getConfigurationFile(configFilePath);
 
+  //prepare js resources
+  const resources = prepareResources(configFile, configFilePath);
+
   if (config.lifespan) {
     installLifespan(config.lifespan);
   }
 
-  //prepare js resources
-  const resources = prepareResources(configFile, configFilePath);
-
-  //open page
   nightmare
+    //add handler for client side logging
     .on(
       'console',
       (type, msg) => {
-       logger.info(type)
-       logger.info(msg)
+        logger.info(type)
+        logger.info(msg)
       }
     )
+    //open page
     .goto(config.url);
 
   setTimeout(
