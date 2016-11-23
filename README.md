@@ -24,7 +24,7 @@ It's very simple :] mocha-nightmare does the following things:
 
 You might want to install it globally
 ```
-npm i mocha-nightwatch -g
+npm i mocha-nightmare -g
 ```
 prepare json configuration file
 ```js
