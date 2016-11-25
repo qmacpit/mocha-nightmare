@@ -1,5 +1,5 @@
 # mocha-nightmare
-
+![alt tag](https://media.giphy.com/media/NMNOUT8CI3Owg/giphy.gif)
 ## Caution
 
 This is very early days concept :| You shouldn't expect too much out otf it. Created for a specific purpose which is far more important then the tool itself.
