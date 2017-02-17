@@ -1,6 +1,11 @@
 describe('example test suite', function() {
 
-  it('example test', function() {
+  it('tc_1', function(done) {
+    console.log('log from tc_1');
+    done();
+  });
+
+  it('tc_2', function() {
 
     const SEARCH_FIELD_SELECTOR = 'uh-search-box';
     const TEXT = 'sample search term';

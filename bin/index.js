@@ -9,6 +9,11 @@ const initLogger = require('../src/logger');
 const PARAMS_REQUIRED = [
   'resources', 'url'
 ];
+const RESULTS_FILE_NAME = 'results.xml';
+const REPORTERS = {
+  WEB_CONSOLE: 'webConsole',
+  XUNIT      : 'xunit'
+};
 
 const checkRequiredParam = param => {
   if (!program[param]) {
@@ -28,6 +33,8 @@ program
   .option('-h, --headfull', 'displays electron UI', false)
   .option('-e, --endless', 'do not terminate electron UI afere all tests have been run')
   .option('-v, --verbose', 'print verbose info')
+  .option('-o, --output <path>', 'path to test output file', RESULTS_FILE_NAME)
+  .option('--xunit', 'uses xunit mocha reporter, WebConsole used by default')
   .parse(process.argv);
 
 //init logger
@@ -41,5 +48,12 @@ require('../src/tester')({
   warmup   : program.warmup,
   lifespan : program.lifespan,
   headfull : program.headfull,
-  endless  : program.endless
+  endless  : program.endless,
+  //we use output file only in case of xunit reporter
+  //WebConsole reults are not meant to be written into file
+  output   : program.xunit ? program.output : false,
+  //for simplicity we doesn't allow to define other reporter types
+  //most of mocha's build-in reportes are meant to be used with node.js
+  //right we can use a default WebConsole reporter or XUnit reporter usefull for CI
+  reporter : program.xunit ? REPORTERS.XUNIT : REPORTERS.WEB_CONSOLE
 });

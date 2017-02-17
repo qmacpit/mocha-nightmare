@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const Nightmare = require('nightmare');
 
 const logger = require('./logger')();
@@ -15,26 +16,31 @@ const FETCH_RESULTS_RETRY_INTERVAL = 500;
  * Browser function
  * Run an interval and checks if test resuls have been generated
  */
-function fetchTestsResults(nightmare, callback) {
+function fetchTestsResults(nightmare, onTestResults) {
 
   function retry() {
     nightmare
+      //fetch tets results
       .evaluate(() => window.__TEST_RESULTS)
       .then(testResults => {
         if (!testResults) {
           return setTimeout(retry, FETCH_RESULTS_RETRY_INTERVAL);
         }
-        callback(testResults);
+        onTestResults(testResults);
       });
   }
 
   retry();
 }
 
+const setReporter = (nightmare, reporter) => {
+  return nightmare
+    .evaluate((testReporter) => window.__REPORTER = testReporter, reporter)
+}
 
 /**
  * Install test run lifespan
- * Terminates the program after lifespan timeout expires
+ * Terminate the program after lifespan timeout expires
  * Can be used for prevening the program to run endlessly
  */
 const installLifespan = lifespan => {
@@ -53,7 +59,7 @@ const installLifespan = lifespan => {
 
 /**
  * Prepare an array of js resources to be injecteed to the browser
- * Combines test runner resources with user defined js files
+ * Combine test runner resources with user defined js files
  */
 const prepareResources = (configFile, configFilePath) => {
 
@@ -72,7 +78,7 @@ const prepareResources = (configFile, configFilePath) => {
 
 /**
  * Try to open configuration file
- * Terminates the program if file cannot be opened
+ * Terminate the program if file cannot be opened
  */
 const getConfigurationFile = configFilePath => {
 
@@ -87,6 +93,12 @@ const getConfigurationFile = configFilePath => {
   }
 
   return configFile;
+}
+
+const writeOutputToFile = (path, data, callback) => {
+  const writer = fs.createWriteStream(path);
+  writer.on('finish', callback);
+  writer.end(data);
 }
 
 module.exports = config => {
@@ -116,10 +128,7 @@ module.exports = config => {
     //add handler for client side logging
     .on(
       'console',
-      (type, msg) => {
-        logger.info(type)
-        logger.info(msg)
-      }
+      (type, msg) => logger.info(msg)
     )
     //open page
     .goto(config.url);
@@ -127,33 +136,41 @@ module.exports = config => {
   setTimeout(
     () => {
 
-      logger('warmup performed')
-
-      //load resources
-      resources.forEach(current => {
-        logger(`injecting: ${current}`);
-        nightmare.inject('js', current);
-      });
-
-      //run tests
-      nightmare
+      logger('warmup performed');
+      logger(`setting reporter: ${config.reporter}`);
+      //set reporter
+      setReporter(nightmare, config.reporter)
         .then(() => {
 
-          logger('running tests');
-
-          fetchTestsResults(nightmare, testResults => {
-
-            logger('logs collected');
-            process.stdout.write(testResults);
-
-            if (!config.endless) {
-              process.exit();
-            }
-
+          //load resources
+          resources.forEach(current => {
+            logger(`injecting: ${current}`);
+            nightmare.inject('js', current);
           });
 
-        });
+          //run tests
+          nightmare
+            .then(() => {
 
+              logger('running tests');
+
+              fetchTestsResults(
+                nightmare,
+                testResults => {
+                  logger('test results collected');
+
+                  const finish = () => config.endless ? null : process.exit()
+
+                  if (config.output) {
+                    return writeOutputToFile(config.output, testResults, finish);
+                  }
+                  finish();
+                }
+              );
+
+            });
+
+        });
     },
     config.warmup
   );
