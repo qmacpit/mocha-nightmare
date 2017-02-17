@@ -39,7 +39,7 @@ window.it = function(tcName, testFn) {
     this,
     tcName,
     isAsyncTest
-      ? function(done) { runTc(done); }
-      : function() { runTc(); }
+      ? function(done) { runTc.call(this, done); }
+      : function() { runTc.call(this); }
   );
 };
