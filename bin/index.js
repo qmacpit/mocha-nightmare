@@ -35,6 +35,7 @@ program
   .option('-v, --verbose', 'print verbose info')
   .option('-o, --output <path>', 'path to test output file', RESULTS_FILE_NAME)
   .option('--xunit', 'uses xunit mocha reporter, WebConsole used by default')
+  .option('--disable-security', 'disable web security in electron (i.e. to allow cross-domain requests)')
   .parse(process.argv);
 
 //init logger
@@ -55,5 +56,6 @@ require('../src/tester')({
   //for simplicity we doesn't allow to define other reporter types
   //most of mocha's build-in reportes are meant to be used with node.js
   //right we can use a default WebConsole reporter or XUnit reporter usefull for CI
-  reporter : program.xunit ? REPORTERS.XUNIT : REPORTERS.WEB_CONSOLE
+  reporter : program.xunit ? REPORTERS.XUNIT : REPORTERS.WEB_CONSOLE,
+  disableSecurity: program.disableSecurity
 });
