@@ -110,7 +110,10 @@ module.exports = config => {
     openDevTools: {
       mode: 'detach'
     },
-    show: config.headfull
+    show: config.headfull,
+    webPreferences: {
+      webSecurity: !config.disableSecurity
+    }
   });
 
   //read configuration from file
