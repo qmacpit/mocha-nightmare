@@ -1,6 +1,6 @@
 {
   "name": "mocha-nightmare",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "mocha client side tests nightmare runner",
   "keywords": [
     "mocha",
